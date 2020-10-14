@@ -70,6 +70,50 @@ function! quickpick#open(opt) abort
   inoremap <buffer><silent> <Plug>(quickpick-move-previous) <ESC>:<C-u>call <SID>on_move_previous(1)<CR>
   nnoremap <buffer><silent> <Plug>(quickpick-move-previous) :<C-u>call <SID>on_move_previous(0)<CR>
 
+  if has_key(s:state, 'on_vsplit')
+    inoremap <buffer><silent> <Plug>(quickpick-vsplit) <ESC>:<C-u>call <SID>on_vsplit()<CR>
+    nnoremap <buffer><silent> <Plug>(quickpick-vsplit) :<C-u>call <SID>on_vsplit()<CR>
+
+    if !hasmapto('<Plug>(quickpick-vsplit)')
+      imap <buffer> <C-v> <Plug>(quickpick-vsplit)
+      nmap <buffer> <C-v> <Plug>(quickpick-vsplit)
+    endif
+
+  endif
+
+  if has_key(s:state, 'on_split')
+    inoremap <buffer><silent> <Plug>(quickpick-split) <ESC>:<C-u>call <SID>on_split()<CR>
+    nnoremap <buffer><silent> <Plug>(quickpick-split) :<C-u>call <SID>on_split()<CR>
+
+    if !hasmapto('<Plug>(quickpick-split)')
+      imap <buffer> <C-s> <Plug>(quickpick-split)
+      nmap <buffer> <C-s> <Plug>(quickpick-split)
+    endif
+
+  endif
+
+  if has_key(s:state, 'on_tabnew')
+    inoremap <buffer><silent> <Plug>(quickpick-tabnew) <ESC>:<C-u>call <SID>on_tabnew()<CR>
+    nnoremap <buffer><silent> <Plug>(quickpick-tabnew) :<C-u>call <SID>on_tabnew()<CR>
+
+    if !hasmapto('<Plug>(quickpick-tabnew)')
+      imap <buffer> <C-t> <Plug>(quickpick-tabnew)
+      nmap <buffer> <C-t> <Plug>(quickpick-tabnew)
+    endif
+
+  endif
+
+  if has_key(s:state, 'on_bufdel')
+    inoremap <buffer><silent> <Plug>(quickpick-bufdel) <ESC>:<C-u>call <SID>on_bufdel()<CR>
+    nnoremap <buffer><silent> <Plug>(quickpick-bufdel) :<C-u>call <SID>on_bufdel()<CR>
+
+    if !hasmapto('<Plug>(quickpick-bufdel)')
+      imap <buffer> <C-d> <Plug>(quickpick-bufdel)
+      nmap <buffer> <C-d> <Plug>(quickpick-bufdel)
+    endif
+
+  endif
+
   exec printf('setlocal filetype=' . s:state['promptfiletype'])
 
   if !hasmapto('<Plug>(quickpick-accept)')
@@ -259,16 +303,53 @@ function! s:update_items() abort
   call s:win_execute(s:state['promptwinid'], 'resize 1')
 endfunction
 
+function! s:return_list_on_accent() abort
+  let l:index = line('.') - 1 " line is 1 index, list is 0 index
+  if l:index < 0
+    let l:items = []
+  else
+    let l:items = [s:state['fitems'][l:index]]
+  endif
+  return l:items
+endfunction
+
 function! s:on_accept() abort
   if win_gotoid(s:state['resultswinid'])
-    let l:index = line('.') - 1 " line is 1 index, list is 0 index
-    if l:index < 0
-      let l:items = []
-    else
-      let l:items = [s:state['fitems'][l:index]]
-    endif
+    let l:items = s:return_list_on_accent()
     call win_gotoid(s:state['winid'])
     call s:notify('accept', { 'items': l:items })
+  end
+endfunction
+
+function! s:on_vsplit() abort
+  if win_gotoid(s:state['resultswinid'])
+    let l:items = s:return_list_on_accent()
+    call win_gotoid(s:state['winid'])
+    call s:notify('vsplit', { 'items': l:items })
+  end
+endfunction
+
+function! s:on_split() abort
+  if win_gotoid(s:state['resultswinid'])
+    let l:items = s:return_list_on_accent()
+    call win_gotoid(s:state['winid'])
+    call s:notify('split', { 'items': l:items })
+  end
+endfunction
+
+function! s:on_tabnew() abort
+  if win_gotoid(s:state['resultswinid'])
+    let l:items = s:return_list_on_accent()
+    call win_gotoid(s:state['winid'])
+    call s:notify('tabnew', { 'items': l:items })
+  end
+endfunction
+
+function! s:on_bufdel() abort
+  if win_gotoid(s:state['resultswinid'])
+    let l:items = s:return_list_on_accent()
+    call win_gotoid(s:state['winid'])
+    call s:notify('bufdel', { 'items': l:items })
   end
 endfunction
 
