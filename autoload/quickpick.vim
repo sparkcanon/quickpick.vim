@@ -303,53 +303,48 @@ function! s:update_items() abort
   call s:win_execute(s:state['promptwinid'], 'resize 1')
 endfunction
 
-function! s:return_list_on_accent() abort
-  let l:index = line('.') - 1 " line is 1 index, list is 0 index
-  if l:index < 0
-    let l:items = []
-  else
-    let l:items = [s:state['fitems'][l:index]]
-  endif
-  return l:items
-endfunction
-
 function! s:on_accept() abort
   if win_gotoid(s:state['resultswinid'])
-    let l:items = s:return_list_on_accent()
+    let l:index = line('.') - 1 " line is 1 index, list is 0 index
+    if l:index < 0
+      let l:items = []
+    else
+      let l:items = [s:state['fitems'][l:index]]
+    endif
     call win_gotoid(s:state['winid'])
     call s:notify('accept', { 'items': l:items })
   end
 endfunction
 
 function! s:on_vsplit() abort
-  if win_gotoid(s:state['resultswinid'])
-    let l:items = s:return_list_on_accent()
+  if win_gotoid(s:state['winid'])
+    let l:item = s:get_current_result()
     call win_gotoid(s:state['winid'])
-    call s:notify('vsplit', { 'items': l:items })
+    call s:notify('vsplit', { 'items': l:item })
   end
 endfunction
 
 function! s:on_split() abort
-  if win_gotoid(s:state['resultswinid'])
-    let l:items = s:return_list_on_accent()
+  if win_gotoid(s:state['winid'])
+    let l:item = s:get_current_result()
     call win_gotoid(s:state['winid'])
-    call s:notify('split', { 'items': l:items })
+    call s:notify('split', { 'items': l:item })
   end
 endfunction
 
 function! s:on_tabnew() abort
-  if win_gotoid(s:state['resultswinid'])
-    let l:items = s:return_list_on_accent()
+  if win_gotoid(s:state['winid'])
+    let l:item = s:get_current_result()
     call win_gotoid(s:state['winid'])
-    call s:notify('tabnew', { 'items': l:items })
+    call s:notify('tabnew', { 'items': l:item })
   end
 endfunction
 
 function! s:on_bufdel() abort
-  if win_gotoid(s:state['resultswinid'])
-    let l:items = s:return_list_on_accent()
+  if win_gotoid(s:state['winid'])
+    let l:item = s:get_current_result()
     call win_gotoid(s:state['winid'])
-    call s:notify('bufdel', { 'items': l:items })
+    call s:notify('bufdel', { 'items': l:item })
   end
 endfunction
 
@@ -357,6 +352,11 @@ function! s:on_cancel() abort
   call win_gotoid(s:state['winid'])
   call s:notify('cancel', {})
   call quickpick#close()
+endfunction
+
+function! s:get_current_result() abort
+  let l:line = line('.', s:state['resultswinid'])
+  return getbufline(s:state['resultsbufnr'], l:line)[0]
 endfunction
 
 function! s:on_move_next(insertmode) abort
