@@ -44,14 +44,14 @@ function! quickpick#open(opt) abort
   let s:state['promptwinid'] = win_getid()
 
   call win_gotoid(s:state['resultswinid'])
-  call s:set_buffer_options()
+  call s:set_buffer_options('result')
   setlocal cursorline
   call s:update_items()
   exec printf('setlocal filetype=' . s:state['filetype'])
   call s:notify('open', { 'bufnr': s:state['bufnr'], 'winid': s:state['winid'] , 'resultsbufnr': s:state['resultsbufnr'], 'resultswinid': s:state['resultswinid'] })
 
   call win_gotoid(s:state['promptwinid'])
-  call s:set_buffer_options()
+  call s:set_buffer_options('prompt')
   call setline(1, s:state['input'])
 
   " map keys
@@ -162,11 +162,16 @@ function! quickpick#open(opt) abort
   call quickpick#busy(s:state['busy'])
 endfunction
 
-function! s:set_buffer_options() abort
+function! s:set_buffer_options(type) abort
   " set buffer options
   abc <buffer>
   setlocal bufhidden=unload           " unload buf when no longer displayed
-  setlocal buftype=nofile             " buffer is not related to any file<Paste>
+  if a:type == 'prompt'
+    setlocal buftype=prompt             " buffer is prompt buffer
+    call prompt_setprompt(s:state['promptbufnr'], '~ ')
+  else
+    setlocal buftype=nofile             " buffer is not related to any file<Paste>
+  endif
   setlocal noswapfile                 " don't create swap file
   setlocal nowrap                     " don't soft-wrap
   setlocal nonumber                   " don't show line numbers
@@ -182,7 +187,6 @@ function! s:set_buffer_options() abort
   setlocal winfixheight
   if exists('+colorcolumn') | setlocal colorcolumn=0 | endif
   if exists('+relativenumber') | setlocal norelativenumber | endif
-  setlocal signcolumn=yes             " for prompt
 endfunction
 
 function! quickpick#close() abort
@@ -437,7 +441,7 @@ function! s:debounce_onchange() abort
 endfunction
 
 function! s:notify_onchange(...) abort
-  let s:state['input'] = getbufline(s:state['promptbufnr'], 1)[0]
+  let s:state['input'] = getbufline(s:state['promptbufnr'], 1)[0]->substitute('^\~\ ', '', '')
   call s:notify('change', { 'input': s:state['input'] })
   if s:state['filter']
     call s:update_items()
